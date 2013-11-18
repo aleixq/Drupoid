@@ -268,8 +268,13 @@ function drupapp_service_image_upload() {
   $result = FALSE;
 
   // Try to save the node and file.
-  if ($file = _drupapp_save_upload('image')) {
-
+  if ($file = _drupapp_save_upload('image',$_POST['title'])) {
+    //JUST CREATE FILE, if node rearrange this return and allow to build node
+    return array(
+      'result' => TRUE,
+      'message' => 'File saved to media library',
+    );    
+    
     // Build node.
     list($bundle, $image_field_name) = explode('|', variable_get('drupapp_image_field'));
     $node = new stdClass();
@@ -309,9 +314,10 @@ function drupapp_service_image_upload() {
  *   The key in the $_FILES variable to look for
  *   the image.
  */
-function _drupapp_save_upload($image_key) {
+function _drupapp_save_upload($image_key, $title) {
 
-  $destination = 'drupapp_' . time() . '.jpg';
+//  $destination = 'drupapp_' . time() . '.jpg';
+  $destination = $title.'.jpg';
 
   // We need to manipulate the $_FILES array so file.inc can handle it.
   $_FILES['files']['name'][$image_key] = $destination;
@@ -320,5 +326,10 @@ function _drupapp_save_upload($image_key) {
   $_FILES['files']['size'][$image_key] = $_FILES[$image_key]['size'];
 
   // Create destination and save the file.
-  return file_save_upload($image_key, array(), "public://");
+  $file=file_save_upload($image_key, array(), "public://");
+// Change the status
+$file->status = 1;
+// Update the file status into the database
+return file_save($file);
+
 }
